@@ -24,10 +24,6 @@ Built with a decoupled microservice architecture using **FastAPI, Celery, Redis,
              via Groq LLM    +-----------------+         +-------------------+
 ```
 
----
-
-# 📌 System Workflow
-
 1. **Document Ingestion**: PDFs are uploaded via the Streamlit frontend to FastAPI and passed to a Redis-backed Celery queue for non-blocking asynchronous processing.
 
 2. **Text Chunking & Embedding**: The Celery worker parses the document, splits text into overlapping chunks, and generates vector embeddings using HuggingFace's all-MiniLM-L6-v2 model.
@@ -40,13 +36,19 @@ Built with a decoupled microservice architecture using **FastAPI, Celery, Redis,
 
 # ⚡ Tech Stack
 
-**Frontend**: Streamlit, Custom CSS Styling
-**Backend Framework**: FastAPI, Uvicorn, Pydantic
-**Asynchronous Processing**: Celery, Redis
-**Vector Database**: Qdrant Vector Search
-**Embeddings & LLM**: HuggingFace all-MiniLM-L6-v2, Groq Cloud (llama-3.3-70b-versatile)
-**Framework Orchestration**: LangChain
-**Infrastructure Containerization**: Docker, Docker Compose
+- **Frontend**: Streamlit, Custom CSS Styling
+
+- **Backend Framework**: FastAPI, Uvicorn, Pydantic
+
+- **Asynchronous Processing**: Celery, Redis
+
+- **Vector Database**: Qdrant Vector Search
+
+- **Embeddings & LLM**: HuggingFace all-MiniLM-L6-v2, Groq Cloud (llama-3.3-70b-versatile)
+
+- **Framework Orchestration**: LangChain
+
+- **Infrastructure Containerization**: Docker, Docker Compose
 
 ---
 
@@ -105,20 +107,13 @@ cd AI-RAG-APPLICATION
 
 ```bash
 python -m venv .venv
-```
 
 ### Windows
-```bash
 .venv\Scripts\activate
-```
 
 ### Linux/macOS
-```bash
 source .venv/bin/activate
-```
 
-Install dependencies
-```bash
 pip install -r requirements.txt
 ```
 
@@ -148,7 +143,7 @@ Open 4 separate terminal tabs in your project root directory:
 docker compose up -d
 ```
 
-## Start FastAPI Backend API
+## 2. Start FastAPI Backend API
 
 ```bash
 uvicorn backend.main:app --reload
@@ -166,10 +161,9 @@ celery -A worker.worker.celery_app worker --loglevel=info -P threads
 streamlit run frontend/app.py
 ```
 
-**Web Application UI**: http://localhost:8501
+- **Web Application UI**: http://localhost:8501
 
-**FastAPI Swagger Docs**: http://localhost:8000/docs
-
+- **FastAPI Swagger Docs**: http://localhost:8000/docs
 
 
 # 🌟 Key Features & Highlights
