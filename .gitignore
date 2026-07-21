@@ -1,0 +1,29 @@
+# Environment variables (API Keys)
+.env
+.env.local
+
+# Temporary uploads & local history
+temp_uploads/
+chat_history.json
+
+# Python bytecode & cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment folders
+env/
+venv/
+ENV/
+.venv
+
+# IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS system files
+.DS_Store
+Thumbs.db

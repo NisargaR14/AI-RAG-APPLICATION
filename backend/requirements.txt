@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+langchain
+langchain-google-genai
+langchain-qdrant
+langchain-huggingface
+sentence-transformers
+qdrant-client
+pypdf
+python-dotenv
+redis
+celery
+python-multipart
