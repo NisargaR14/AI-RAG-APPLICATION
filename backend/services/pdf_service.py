@@ -1,20 +1,33 @@
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import fitz  # PyMuPDF
+import pdfplumber
+from langchain_core.documents import Document
 
-def process_and_chunk_pdf(pdf_path: str):
+def extract_text_from_pdf(file_path: str):
     """
-    1. Loads text from a PDF file.
-    2. Splits it into overlapping chunks to preserve semantic context.
+    Extracts text from both native PDFs and image/scanned PDFs.
     """
-    loader = PyPDFLoader(pdf_path)
-    documents = loader.load()
+    documents = []
     
-    # 1000 characters per chunk with 200 character overlap
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, 
-        chunk_overlap=200 
-        # Shifts each chunk window back by 200 characters. 
-        # This ensures that sentences split at chunk boundaries don't lose key context.
-    )
-    chunks = text_splitter.split_documents(documents)
-    return chunks
+    # Try standard PyMuPDF first for speed
+    doc = fitz.open(file_path)
+    total_pages = len(doc)
+    
+    for page_num in range(total_pages):
+        page = doc[page_num]
+        text = page.get_text()
+        
+        # If the page has text, store it
+        if text.strip():
+            documents.append(Document(page_content=text, metadata={"page": page_num + 1}))
+            
+    # Fallback if the PDF consists mostly of images/mindmaps
+    if not documents or len(documents) < (total_pages / 2):
+        print("Scanned/Image PDF detected. Running enhanced extraction...")
+        documents = []
+        with pdfplumber.open(file_path) as pdf:
+            for idx, page in enumerate(pdf.pages):
+                text = page.extract_text(layout=True) or ""
+                if text.strip():
+                    documents.append(Document(page_content=text, metadata={"page": idx + 1}))
+
+    return documents

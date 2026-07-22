@@ -9,12 +9,18 @@ st.set_page_config(page_title="Enterprise Document Intelligence Core", page_icon
 
 # Storage helpers
 def load_chats():
-    return json.load(open(CHAT_FILE)) if os.path.exists(CHAT_FILE) else {}
+    if os.path.exists(CHAT_FILE):
+        try:
+            with open(CHAT_FILE, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+    return {}
 
 def save_chats(chats):
     json.dump(chats, open(CHAT_FILE, "w"), indent=2)
 
-# CSS Styling (Restores Image 1 Look)
+# CSS Styling
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -78,11 +84,19 @@ with st.sidebar:
     st.markdown("### 🗂️ Document Ingestion")
     file = st.file_uploader("Select PDF", type=["pdf"], label_visibility="collapsed")
     if file and st.button("⚡ Index Document", use_container_width=True, type="primary"):
-        res = requests.post(f"{API_URL}/upload", files={"file": (file.name, file.getvalue(), "application/pdf")})
-        if res.status_code == 200:
-            st.toast("PDF successfully vectorized!", icon="✨")
-        else:
-            st.error("Upload failed.")
+        with st.spinner("Dispatching task to Celery worker..."):
+            res = requests.post(f"{API_URL}/upload", files={"file": (file.name, file.getvalue(), "application/pdf")})
+            if res.status_code == 200:
+                # Reset chat session on new PDF upload to clear old context
+                new_id = str(uuid.uuid4())
+                chats[new_id] = {"title": f"📄 {file.name[:20]}...", "messages": []}
+                save_chats(chats)
+                st.session_state.chat_id = new_id
+                
+                st.toast("PDF indexing started! Give Celery a few seconds.", icon="✨")
+                st.rerun()
+            else:
+                st.error("Upload failed.")
 
     st.markdown("---")
     if st.button("➕ New Chat", use_container_width=True):
@@ -140,12 +154,15 @@ if prompt := st.chat_input("Ask a question about your uploaded document..."):
         with st.spinner("Synthesizing answer..."):
             res = requests.post(f"{API_URL}/query", params={"question": prompt})
             if res.status_code == 200:
-                ans, srcs = res.json().get("answer", ""), res.json().get("sources", [])
+                ans = res.json().get("answer", "")
+                srcs = res.json().get("sources", [])
+                
                 st.markdown(ans)
                 if srcs:
                     with st.expander("🔍 Verified Context Citations"):
                         for idx, src in enumerate(srcs, 1):
                             st.markdown(f'<div class="source-box"><b>Chunk {idx}:</b> {src}</div>', unsafe_allow_html=True)
+                
                 curr_chat["messages"].append({"role": "assistant", "content": ans, "sources": srcs})
                 chats[st.session_state.chat_id] = curr_chat
                 save_chats(chats)

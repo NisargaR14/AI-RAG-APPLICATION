@@ -12,13 +12,15 @@ def get_vector_store(force_recreate: bool = False):
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     
+    # Check existing collections
     collections = [col.name for col in client.get_collections().collections]
     
-    # Delete old collection when uploading a new PDF
+    # Delete old collection when force_recreate is True
     if force_recreate and COLLECTION_NAME in collections:
         client.delete_collection(collection_name=COLLECTION_NAME)
         collections.remove(COLLECTION_NAME)
         
+    # Create fresh collection if missing
     if COLLECTION_NAME not in collections:
         client.create_collection(
             collection_name=COLLECTION_NAME,

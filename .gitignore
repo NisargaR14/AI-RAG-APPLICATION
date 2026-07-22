@@ -27,3 +27,7 @@ ENV/
 # OS system files
 .DS_Store
 Thumbs.db
+
+# Local Database & Storage
+data/
+data/qdrant_storage/
