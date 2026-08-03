@@ -11,3 +11,5 @@ python-dotenv
 redis
 celery
 python-multipart
+pymupdf
+pdfplumber
